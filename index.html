@@ -1,0 +1,1863 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Toddler's Letter & Number Adventure</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #f0f9ff;
+            --primary-color: #3b82f6;
+            --secondary-color: #fbbf24;
+            --correct-color: #22c55e;
+            --incorrect-color: #ef4444;
+            --pink-color: #ec4899;
+            --purple-color: #8b5cf6;
+            --teal-color: #14b8a6; /* New color for the counting button */
+            --orange-color: #f97316; /* New color for shapes button */
+            --text-color: #1e293b;
+            --font-main: 'Fredoka One', cursive;
+            --font-ui: 'Inter', sans-serif;
+        }
+
+        /* General Body Styles */
+        body {
+            font-family: var(--font-ui);
+            margin: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            -webkit-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Game Container */
+        #game-container {
+            width: 100%;
+            max-width: 600px;
+            height: 100vh;
+            max-height: 900px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+            transition: background 0.5s ease;
+        }
+        
+        /* Particle Canvas for effects */
+        #particle-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        /* Header UI */
+        .game-header {
+            padding: 10px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            border-bottom: 2px solid #e2e8f0;
+            z-index: 10;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            background-color: #eff6ff;
+            padding: 8px 12px;
+            border-radius: 9999px;
+        }
+
+        .stat-item span {
+            margin-left: 8px;
+        }
+        
+        .avatar-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #avatar-display {
+            position: relative;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0;
+            background-color: var(--secondary-color);
+            border: 3px solid white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-radius: 9999px;
+        }
+        #avatar-display svg {
+            width: 70%;
+            height: 70%;
+        }
+        .avatar-accessory {
+            position: absolute;
+            font-size: 1.5rem;
+            top: -15px;
+            left: 5px;
+            transform: rotate(-15deg);
+        }
+        #avatar-name-display {
+            font-family: var(--font-main);
+            font-size: 0.8rem;
+            margin-top: 2px;
+            color: var(--text-color);
+            background-color: #f1f5f9;
+            padding: 1px 6px;
+            border-radius: 6px;
+            min-height: 1.2em;
+        }
+
+
+        /* Main Game Area */
+        .main-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-evenly; /* Switched back to space-evenly with smaller items */
+            align-items: center;
+            padding: 0px 20px; /* Keep vertical padding at 0 */
+            position: relative;
+            overflow-y: hidden; /* Changed from auto to prevent scrolling */
+        }
+        
+        #prompt-container {
+            margin-bottom: 5px; /* Reduced from 10px */
+            text-align: center;
+        }
+
+        #prompt-text {
+            font-family: var(--font-main);
+            font-size: 1.7rem; /* Reduced from 1.8rem */
+            color: var(--text-color);
+        }
+
+        #prompt-speaker {
+            font-size: 2.5rem; /* Reduced from 3rem */
+            color: var(--primary-color);
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+        #prompt-speaker:hover {
+            transform: scale(1.1);
+        }
+
+        /* Options Grid */
+        #options-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px; /* Reduced from 10px */
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto; /* Ensure it stays centered */
+        }
+
+        .option-button {
+            font-family: var(--font-main);
+            font-size: 3.5rem; /* Reduced from 4rem */
+            height: 90px; /* Reduced from 100px */
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            color: white;
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .option-button:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Button Colors */
+        .option-button:nth-child(4n+1) { background-color: #ef4444; } /* Red */
+        .option-button:nth-child(4n+2) { background-color: #3b82f6; } /* Blue */
+        .option-button:nth-child(4n+3) { background-color: #fbbf24; } /* Yellow */
+        .option-button:nth-child(4n+4) { background-color: #22c55e; } /* Green */
+
+        /* New class for shape buttons, overrides the colorful backgrounds */
+        .shape-option {
+            background-color: white !important; /* Use !important to override nth-child */
+            border: 3px solid #e2e8f0;
+            color: black; /* This won't be visible, but good for consistency */
+            font-size: 5rem; /* Make the SVG fill the button */
+        }
+        .shape-option svg {
+            width: 70%;
+            height: 70%;
+            stroke: #333; /* A thin dark border on the shape */
+            stroke-width: 2px;
+        }
+
+        /* Animation for correct/incorrect */
+        .option-button.correct-glow { animation: glow-correct 1s ease; }
+        .option-button.shake-incorrect, .in-order-item.shake-incorrect { animation: shake 0.5s ease; }
+
+        @keyframes glow-correct {
+            0%, 100% { box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+            50% { box-shadow: 0 0 30px 10px var(--correct-color); transform: scale(1.05); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-10px); }
+            40%, 80% { transform: translateX(10px); }
+        }
+        
+        /* New styles for Counting Game Mode */
+        #item-display-area {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 8px; /* Reduced from 10px */
+            padding: 10px; /* Reduced from 15px */
+            width: 100%;
+            max-width: 400px;
+            min-height: 110px; /* Reduced from 120px */
+            border-radius: 20px;
+            background-color: #f8fafc;
+            border: 3px dashed var(--primary-color);
+            margin-bottom: 8px; /* Reduced from 10px */
+        }
+
+        .counting-item {
+            font-size: 2.2rem; /* Reduced from 2.5rem */
+            animation: bounce-in 0.5s ease;
+        }
+
+        @keyframes bounce-in {
+            0% { transform: scale(0.5); opacity: 0; }
+            80% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(1); }
+        }
+
+        /* In-Order Game Mode Styles */
+        #in-order-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px; /* Reduced from 10px */
+            width: 100%;
+            padding: 5px; /* Reduced from 10px */
+        }
+        
+        .in-order-item {
+            font-family: var(--font-main);
+            font-size: 1.5rem; /* Reduced from 1.8rem */
+            height: 45px; /* Reduced from 50px */
+            border: 2px solid #d1d5db;
+            border-radius: 10px;
+            cursor: pointer;
+            color: var(--text-color);
+            background-color: #f9fafb;
+            transition: all 0.2s ease-in-out;
+        }
+        
+        .in-order-item.completed {
+            background-color: var(--correct-color);
+            color: white;
+            border-color: var(--correct-color);
+            opacity: 0.7;
+        }
+        
+        /* Sequence Display for In-Order Games */
+        #sequence-display-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 4px; /* Reduced from 5px */
+            margin-bottom: 10px; /* Reduced from 15px */
+            padding: 8px; /* Reduced from 10px */
+            background-color: #e0e7ff;
+            border-radius: 10px;
+            width: 100%;
+            min-height: 30px; /* Reduced from 40px */
+        }
+        .sequence-item {
+            width: 25px; /* Reduced from 30px */
+            height: 30px; /* Reduced from 35px */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f1f5f9;
+            border: 2px solid #cbd5e1;
+            border-radius: 8px;
+            font-family: var(--font-main);
+            font-size: 1rem; /* Reduced from 1.2rem */
+            color: transparent; /* Hide text initially */
+        }
+        .sequence-item.filled {
+            background-color: var(--secondary-color);
+            border-color: #f59e0b;
+            color: var(--text-color);
+            transform: scale(1.1);
+            transition: all 0.3s ease;
+        }
+
+        /* Bottom Navigation */
+        .game-nav {
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            background: #f8fafc;
+            border-top: 2px solid #e2e8f0;
+        }
+
+        .nav-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 2.5rem;
+            color: #94a3b8;
+            transition: color 0.2s, transform 0.2s;
+        }
+        .nav-button.active { color: var(--primary-color); }
+        .nav-button:hover { color: var(--primary-color); transform: translateY(-5px); }
+        
+        /* Modals */
+        .modal {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(5px);
+            z-index: 50;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .modal.visible { opacity: 1; pointer-events: auto; }
+
+        .modal-content {
+            background: white;
+            padding: 15px; /* Reduced from 20px */
+            border-radius: 20px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 90%;
+            max-height: 90%;
+            overflow-y: auto;
+        }
+        .modal-title {
+            font-family: var(--font-main);
+            font-size: 2rem; /* Reduced from 2.5rem */
+            margin-bottom: 10px; /* Reduced from 20px */
+            color: var(--primary-color);
+        }
+        .close-modal {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 2rem;
+            cursor: pointer;
+            color: var(--text-color);
+        }
+        
+        /* Badge Display */
+        #badge-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 15px;
+        }
+        .badge { font-size: 3rem; opacity: 0.3; filter: grayscale(1); transition: all 0.3s; }
+        .badge.unlocked { opacity: 1; filter: none; transform: scale(1.1); }
+        .badge-tooltip { font-size: 0.8rem; margin-top: -5px; color: #64748b; }
+
+        /* Game Mode Selection Menu */
+        #menu-container .game-mode-button {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 15px;
+            border: none;
+            font-family: var(--font-main);
+            font-size: 1.5rem;
+            color: white;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        #menu-container .game-mode-button:active { transform: scale(0.95); }
+        
+        /* Shop Styles */
+        #shop-container { padding-top: 15px; }
+        .shop-coin-display {
+            font-family: var(--font-ui);
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text-color);
+            background-color: #fffbeb;
+            padding: 10px 15px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border: 2px solid var(--secondary-color);
+            display: inline-block;
+        }
+        .shop-category { margin-bottom: 25px; }
+        .shop-category-title {
+            font-family: var(--font-main);
+            font-size: 1.8rem;
+            color: var(--text-color);
+            margin-bottom: 15px;
+            padding: 8px 20px;
+            text-align: left;
+            border-radius: 99px;
+        }
+        .shop-sticker-explainer {
+            font-size: 0.9rem;
+            color: #475569;
+            margin-top: -10px;
+            margin-bottom: 15px;
+            text-align: left;
+            padding: 0 10px;
+        }
+        /* Title Colors */
+        .shop-category[data-category="avatarParts"] .shop-category-title { background-color: var(--primary-color); color: white;}
+        .shop-category[data-category="accessories"] .shop-category-title { background-color: var(--pink-color); color: white;}
+        .shop-category[data-category="backgrounds"] .shop-category-title { background-color: var(--correct-color); color: white;}
+        .shop-category[data-category="cursors"] .shop-category-title { background-color: var(--purple-color); color: white;}
+        .shop-category[data-category="stickers"] .shop-category-title { background-color: var(--secondary-color); color: var(--text-color);}
+
+        .shop-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 15px;
+        }
+        .shop-item {
+            aspect-ratio: 1 / 1;
+            border-radius: 15px;
+            border: 3px solid #e2e8f0;
+            cursor: pointer;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: transform 0.2s, box-shadow 0.2s;
+            font-size: 2.5rem;
+        }
+        .shop-item:hover { transform: scale(1.05); box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .shop-item.locked { background-color: #f1f5f9; }
+        .shop-item.selected { border-color: var(--secondary-color); box-shadow: 0 0 15px var(--secondary-color); }
+        
+        .sticker-item.locked { filter: grayscale(1); opacity: 0.3; }
+
+        .lock-icon {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            font-size: 1.2rem;
+            background: rgba(255,255,255,0.7);
+            padding: 3px;
+            border-radius: 50%;
+        }
+        .item-cost {
+            position: absolute;
+            bottom: 5px;
+            right: 5px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            background: var(--secondary-color);
+            color: var(--text-color);
+            padding: 2px 8px;
+            border-radius: 99px;
+        }
+        
+        /* Avatar Builder Modal */
+        #avatar-builder-modal .modal-content {
+            display: flex;
+            flex-direction: column;
+            overflow-y: hidden; /* Prevent scrolling on this specific modal */
+            max-height: 90vh; /* Use viewport height to ensure it fits on screen */
+            /* Removed height: 95% to let content size itself */
+        }
+
+        #avatar-builder-container {
+            display: flex;
+            flex-direction: column;
+            gap: 5px; /* Reduced from 10px */
+            flex-grow: 1; /* Allows this container to take up space */
+            overflow: hidden; /* Hide any internal overflow */
+        }
+        #avatar-name-input {
+            width: 80%;
+            padding: 6px; /* Reduced from 8px */
+            font-family: var(--font-main);
+            font-size: 1.1rem; /* Reduced from 1.25rem */
+            text-align: center;
+            border: 3px solid #e2e8f0;
+            border-radius: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5em;
+            margin: 0 auto 5px;
+        }
+        #avatar-name-input::placeholder { color: #cbd5e1; }
+        
+        #avatar-preview-area {
+            width: 80px; /* Reduced from 100px */
+            height: 80px; /* Reduced from 100px */
+            margin: 0 auto;
+            border: 4px dashed #cbd5e1;
+            border-radius: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-shrink: 0; /* Prevents this from shrinking */
+        }
+        #avatar-preview-area svg {
+            width: 80%;
+            height: 80%;
+        }
+
+        #builder-scroll-area {
+            flex-grow: 1;
+            overflow-y: hidden; /* Changed from auto to hidden */
+            padding: 5px;
+            margin-top: 5px; /* Reduced from 10px */
+        }
+
+        .builder-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 5px; /* Reduced from 10px */
+        }
+        .builder-category-title {
+            font-family: var(--font-main);
+            font-size: 0.9rem; /* Reduced from 1rem */
+            text-align: left;
+        }
+        .builder-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px; /* Reduced gap */
+            justify-content: center;
+        }
+        .builder-option {
+            width: 35px; /* Reduced from 40px */
+            height: 35px; /* Reduced from 40px */
+            border: 3px solid #e2e8f0;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .builder-option.selected {
+            border-color: var(--primary-color);
+        }
+        .builder-option svg {
+            width: 70%;
+            height: 70%;
+        }
+        .color-option {
+            border-radius: 50%;
+        }
+        #builder-finish-btn {
+            font-family: var(--font-main);
+            font-size: 1.1rem; /* Reduced from 1.25rem */
+            padding: 10px; /* Reduced from 12px */
+            border: none;
+            border-radius: 15px;
+            background-color: var(--correct-color);
+            color: white;
+            cursor: pointer;
+            margin-top: 5px; /* Reduced from 10px */
+            flex-shrink: 0;
+        }
+
+
+        /* Custom Confirm Modal */
+        #confirm-modal .modal-content { max-width: 300px; }
+        #confirm-text { font-size: 1.2rem; margin-bottom: 20px; }
+        #confirm-buttons { display: flex; justify-content: center; gap: 15px;}
+        .confirm-btn {
+            font-family: var(--font-main);
+            font-size: 1.5rem;
+            padding: 10px 30px;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            color: white;
+        }
+        #confirm-yes { background-color: var(--correct-color); }
+        #confirm-no { background-color: var(--incorrect-color); }
+
+
+        /* Hide screens */
+        .screen { display: none; }
+        .screen.active { display: flex; }
+
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        <canvas id="particle-canvas"></canvas>
+
+        <header class="game-header">
+            <div class="avatar-wrapper">
+                 <div id="avatar-display" class="stat-item"></div>
+                 <div id="avatar-name-display">BUD</div>
+            </div>
+            <div id="stat-coins" class="stat-item">
+                <span>💰</span><span id="coins-count">0</span>
+            </div>
+            <div id="stat-streak" class="stat-item">
+                <span>🔥</span><span id="streak-count">0</span>
+            </div>
+        </header>
+        
+        <main id="game-screen" class="main-content screen active"></main>
+        <main id="in-order-screen" class="main-content screen"></main>
+
+        <nav class="game-nav">
+            <button id="nav-home" class="nav-button active" title="Home">🏠</button>
+            <button id="nav-badges" class="nav-button" title="My Badges">🏆</button>
+            <button id="nav-shop" class="nav-button" title="Shop">🛍️</button>
+        </nav>
+
+        <div id="menu-modal" class="modal visible"></div>
+        <div id="badges-modal" class="modal"></div>
+        <div id="shop-modal" class="modal"></div>
+        
+        <!-- New Modals -->
+        <div id="avatar-builder-modal" class="modal"></div>
+        <div id="confirm-modal" class="modal"></div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+
+        // --- DOM ELEMENTS ---
+        const gameContainer = document.getElementById('game-container');
+        const coinsCountEl = document.getElementById('coins-count');
+        const streakCountEl = document.getElementById('streak-count');
+        const avatarDisplayEl = document.getElementById('avatar-display');
+        const avatarNameDisplayEl = document.getElementById('avatar-name-display');
+
+        // Screens
+        const gameScreen = document.getElementById('game-screen');
+        const inOrderScreen = document.getElementById('in-order-screen');
+
+        // Modals
+        const menuModal = document.getElementById('menu-modal');
+        const badgesModal = document.getElementById('badges-modal');
+        const shopModal = document.getElementById('shop-modal');
+        const avatarBuilderModal = document.getElementById('avatar-builder-modal');
+        const confirmModal = document.getElementById('confirm-modal');
+        
+        // Navigation
+        const navHomeBtn = document.getElementById('nav-home');
+        const navBadgesBtn = document.getElementById('nav-badges');
+        const navShopBtn = document.getElementById('nav-shop');
+
+        // --- GAME STATE ---
+        let state = {
+            coins: 0,
+            streak: 0,
+            gameMode: 'letters',
+            unlockedBadges: [],
+            currentItem: null,
+            options: [],
+            inOrderIndex: 0,
+            inOrderSequence: [],
+            inOrderDisplaySequence: [],
+            avatarChosen: false,
+            avatarName: 'BUD',
+            selectedAvatar: {
+                head: 'shape1',
+                eyes: 'eyes1',
+                mouth: 'mouth1',
+                color: '#3b82f6',
+            },
+            unlockedAvatarParts: {
+                head: ['shape1', 'shape2', 'shape3'], // Default: Circle, Square, Triangle
+                eyes: ['eyes1', 'eyes2', 'eyes3'], // Default: 3 simple eyes
+                mouth: ['mouth1', 'mouth2'], // Default: 2 simple mouths
+                color: ['#3b82f6', '#ef4444', '#22c55e', '#fbbf24'] // Default: 4 basic colors
+            },
+            selectedAccessory: 'none',
+            unlockedAccessories: ['none'],
+            unlockedStickers: [],
+            unlockedItems: { backgrounds: ['default'], cursors: ['default'] },
+            selectedItems: { background: 'default', cursor: 'default' },
+        };
+
+        const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+        const ALPHABET_LOWERCASE = 'abcdefghijklmnopqrstuvwxyz'.split(''); // New: for matching
+        const NUMBERS = Array.from({length: 21}, (_, i) => String(i)); // 0-20
+        const COUNTING_ITEMS = ['🍎', '🍌', '⭐', '🚗', '🐶', '🎈', '🧁', '🦆', '☀️', '🐸'];
+
+        // --- NEW DATA for Shapes & Colors ---
+        const COLORS = [
+            { name: 'red', hex: '#ef4444' },
+            { name: 'blue', hex: '#3b82f6' },
+            { name: 'yellow', hex: '#fbbf24' },
+            { name: 'green', hex: '#22c55e' },
+            { name: 'purple', hex: '#8b5cf6' },
+            { name: 'pink', hex: '#ec4899' },
+            { name: 'orange', hex: '#f97316' }
+        ];
+
+        // --- NEW: Congratulatory phrases ---
+        const CORRECT_PHRASES = [
+            "Yay!", "Nice!", "Good!", "Great job!", "Well done!", "Correct!", 
+            "Excellent!", "Amazing!", "Super!", "Fantastic!"
+        ];
+
+        const SHAPES = [
+            { name: 'circle', svg: '<circle cx="50" cy="50" r="40"/>' },
+            { name: 'square', svg: '<rect x="10" y="10" width="80" height="80" rx="5"/>' },
+            { name: 'triangle', svg: '<polygon points="50,10 90,90 10,90"/>' },
+            { name: 'star', svg: '<polygon points="50,5 61.8,38.2 98.8,38.2 68.5,59.8 79.3,95 50,72.8 20.7,95 31.5,59.8 1.2,38.2 38.2,38.2"/>' },
+            { name: 'heart', svg: '<path d="M50 30 C30 10, 10 30, 25 50 L50 80 L75 50 C90 30, 70 10, 50 30 Z"/>' }
+        ];
+        
+        const BADGES = {
+            first_correct: { icon: '✅', title: 'First Correct!', description: 'Answer your first question right.' },
+            streak_5: { icon: '🔥', title: 'On Fire!', description: 'Get a 5-answer streak.' },
+            streak_10: { icon: '🚀', title: 'Rocket Streak!', description: 'Get a 10-answer streak.' },
+            coins_50: { icon: '💰', title: 'Coin Collector', description: 'Earn 50 coins.' },
+            coins_250: { icon: '🏦', title: 'Coin Bank', description: 'Earn 250 coins.' },
+            shop_explorer: { icon: '🗺️', title: 'Explorer', description: 'Visit the shop for the first time.' },
+            first_purchase: { icon: '💸', title: 'First Purchase!', description: 'Buy your first item.' },
+            all_letters_found: { icon: '🔤', title: 'Alphabet Master', description: 'Find all letters once.' },
+            all_numbers_found: { icon: '🔢', title: 'Number Wizard', description: 'Find all numbers once.' },
+            in_order_letters: { icon: '🎶', title: 'ABC Singer', description: 'Complete letters in order.' },
+            in_order_numbers: { icon: '💯', title: 'Count to 20!', description: 'Complete numbers in order.' },
+        };
+        let foundLetters = new Set();
+        let foundNumbers = new Set();
+        
+        // --- AVATAR & SHOP DATA ---
+        const AVATAR_PARTS = {
+            head: {
+                shape1: '<path d="M50 95C25.1472 95 5 74.8528 5 50C5 25.1472 25.1472 5 50 5C74.8528 5 95 25.1472 95 50C95 74.8528 74.8528 95 50 95Z"/>', // Circle
+                shape2: '<path d="M5 5H95V95H5V5Z"/>', // Square
+                shape3: '<path d="M50 15 L95 85 L5 85 Z"/>', // Triangle
+                shape4: '<path d="M50 5 L61.8 38.2 L98.8 38.2 L68.5 59.8 L79.3 95 L50 72.8 L20.7 95 L31.5 59.8 L1.2 38.2 L38.2 38.2 Z"/>', // Star
+                shape5: '<path d="M50 30 C30 10, 10 30, 25 50 L50 80 L75 50 C90 30, 70 10, 50 30 Z"/>', // Heart
+                shape6: '<path d="M50 5 L95 50 L50 95 L5 50 Z"/>', // Diamond
+                shape7: '<path d="M25 10 L75 10 L95 50 L75 90 L25 90 L5 50 Z"/>', // Hexagon
+            },
+            eyes: {
+                eyes1: '<circle cx="35" cy="40" r="5"/><circle cx="65" cy="40" r="5"/>',
+                eyes2: '<path d="M40 45C40 42.2386 37.7614 40 35 40C32.2386 40 30 42.2386 30 45"/><path d="M70 45C70 42.2386 67.7614 40 65 40C62.2386 40 60 42.2386 60 45"/>',
+                eyes3: '<path d="M25 40H45"/><path d="M55 40H75"/>',
+                eyes4: '<circle cx="35" cy="40" r="7"/><circle cx="65" cy="40" r="7"/>',
+                eyes5: '<path d="M30 35 L40 45 M40 35 L30 45" stroke-width="3" stroke-linecap="round"/><path d="M60 35 L70 45 M70 35 L60 45" stroke-width="3" stroke-linecap="round"/>',
+                eyes6: '<circle cx="35" cy="40" r="10"/><circle cx="65" cy="40" r="10"/>', // Surprised
+                eyes7: '<path d="M25 40 C 30 45, 40 45, 45 40"/><circle cx="65" cy="40" r="5"/>', // Wink
+            },
+            mouth: {
+                mouth1: '<path d="M35 70C35 70 40 80 50 80C60 80 65 70 65 70" stroke-width="5" stroke-linecap="round"/>',
+                mouth2: '<path d="M35 75H65" stroke-width="5" stroke-linecap="round"/>',
+                mouth3: '<circle cx="50" cy="75" r="10"/>',
+                mouth4: '<path d="M35 80C35 80 40 70 50 70C60 70 65 80 65 80" stroke-width="5" stroke-linecap="round"/>',
+                mouth5: '<path d="M35 75 Q 42.5 70, 50 75 T 65 75" stroke-width="5" stroke-linecap="round"/>',
+                mouth6: '<path d="M35 70 L 45 80 L 55 70 L 65 80" stroke-width="5" stroke-linecap="round"/>', // Zigzag
+                mouth7: '<path d="M35 70 C35 70 40 80 50 80 C60 80 65 70 65 70" stroke-width="5" stroke-linecap="round"/><path d="M45 80 C 45 85, 55 85, 55 80 Z" fill="#ec4899" stroke="black"/>', // Tongue out
+            }
+        };
+
+        const SHOP_DATA = {
+            avatarParts: [
+                // Colors
+                { id: 'color-#ec4899', name: 'Pink', cost: 50, type: 'color', value: '#ec4899' },
+                { id: 'color-#f97316', name: 'Orange', cost: 50, type: 'color', value: '#f97316' },
+                { id: 'color-#14b8a6', name: 'Teal', cost: 50, type: 'color', value: '#14b8a6' },
+                { id: 'color-#8b5cf6', name: 'Purple', cost: 75, type: 'color', value: '#8b5cf6' },
+                { id: 'color-#f472b6', name: 'Light Pink', cost: 75, type: 'color', value: '#f472b6' },
+
+                // Head Shapes
+                { id: 'head-shape4', name: 'Star', cost: 100, type: 'head', value: 'shape4' },
+                { id: 'head-shape5', name: 'Heart', cost: 100, type: 'head', value: 'shape5' },
+                { id: 'head-shape6', name: 'Diamond', cost: 100, type: 'head', value: 'shape6' },
+                { id: 'head-shape7', name: 'Hexagon', cost: 100, type: 'head', value: 'shape7' },
+                
+                // Eyes
+                { id: 'eyes-eyes4', name: 'Big Dots', cost: 50, type: 'eyes', value: 'eyes4' },
+                { id: 'eyes-eyes5', name: 'X Eyes', cost: 75, type: 'eyes', value: 'eyes5' },
+                { id: 'eyes-eyes6', name: 'Surprised', cost: 75, type: 'eyes', value: 'eyes6' },
+                { id: 'eyes-eyes7', name: 'Wink', cost: 100, type: 'eyes', value: 'eyes7' },
+
+                // Mouths
+                { id: 'mouth-mouth3', name: 'O Mouth', cost: 50, type: 'mouth', value: 'mouth3' },
+                { id: 'mouth-mouth4', name: 'Frown', cost: 50, type: 'mouth', value: 'mouth4' },
+                { id: 'mouth-mouth5', name: 'Wavy', cost: 75, type: 'mouth', value: 'mouth5' },
+                { id: 'mouth-mouth6', name: 'Zigzag', cost: 75, type: 'mouth', value: 'mouth6' },
+                { id: 'mouth-mouth7', name: 'Tongue Out', cost: 100, type: 'mouth', value: 'mouth7' },
+            ],
+            accessories: [
+                { id: 'none', name: 'None', cost: 0, value: ''},
+                { id: '👑', name: 'Crown', cost: 100, value: '👑' },
+                { id: '😎', name: 'Glasses', cost: 75, value: '😎' },
+                { id: '🥳', name: 'Party Hat', cost: 50, value: '🥳' },
+                { id: '🎩', name: 'Top Hat', cost: 125, value: '🎩' },
+                { id: '🎀', name: 'Bow', cost: 60, value: '🎀' }
+            ],
+            backgrounds: [
+                { id: 'default', name: 'Default', cost: 0, value: 'white' },
+                { id: 'sky', name: 'Sky', cost: 50, value: 'linear-gradient(to bottom, #87ceeb, #f0f9ff)' },
+                { id: 'sunny', name: 'Sunny', cost: 75, value: 'linear-gradient(to bottom, #fde047, #facc15)' },
+                { id: 'forest', name: 'Forest', cost: 100, value: 'linear-gradient(to bottom, #4ade80, #22c55e)' },
+                { id: 'night', name: 'Night Sky', cost: 150, value: 'linear-gradient(to bottom, #0f172a, #334155)' },
+                { id: 'candy', name: 'Candy', cost: 200, value: 'linear-gradient(45deg, #f9a8d4, #f472b6, #ec4899)' },
+            ],
+            cursors: [
+                { id: 'default', name: 'Default', cost: 0, value: 'auto' },
+                { id: '⭐', name: 'Star', cost: 25, value: '⭐' },
+                { id: '💖', name: 'Heart', cost: 25, value: '💖' },
+                { id: '✨', name: 'Sparkle', cost: 50, value: '✨' },
+                { id: '🚀', name: 'Rocket', cost: 75, value: '🚀' },
+            ],
+            stickers: {
+                first_correct: { icon: '🌟', name: 'First Star!' },
+                streak_5: { icon: '☄️', name: 'Comet!' },
+                streak_10: { icon: '🛸', name: 'UFO!' },
+                coins_50: { icon: '💎', name: 'Gem!' },
+                coins_250: { icon: '🏛️', name: 'Bank!' },
+                shop_explorer: { icon: '🧭', name: 'Compass!' },
+                first_purchase: { icon: '🛍️', name: 'Shopping Bag!' },
+                all_letters_found: { icon: '📚', name: 'Bookworm!' },
+                all_numbers_found: { icon: '💡', name: 'Bright Idea!' },
+                in_order_letters: { icon: '🎤', name: 'Super Singer!' },
+                in_order_numbers: { icon: '🏆', name: 'Winner!' },
+            }
+        };
+
+        // --- SPEECH & SOUND ---
+        const synth = window.speechSynthesis;
+        let voices = [];
+        function populateVoiceList() {
+            voices = synth.getVoices().filter(voice => voice.lang.startsWith('en'));
+        }
+        
+        populateVoiceList();
+        if (synth.onvoiceschanged !== undefined) {
+            synth.onvoiceschanged = populateVoiceList;
+        }
+
+        function speak(text, rate = 1.0, pitch = 1.2) { // Slightly higher pitch for a friendly, clear voice
+            // Wait for voices to be loaded before speaking, as it can be asynchronous
+            if(voices.length === 0) {
+                setTimeout(() => speak(text, rate, pitch), 100);
+                return;
+            }
+
+            if (synth.speaking) synth.cancel();
+            const utterThis = new SpeechSynthesisUtterance(text);
+            
+            // --- Advanced Voice Selection for a Clear, Friendly Female Voice ---
+            const voicePriorities = [
+                { name: 'Microsoft Zira - English (United States)' }, { name: 'Google US English' }, { name: 'Samantha' }, 
+                { lang: 'en-US', search: 'Female' }, { lang: 'en-GB', search: 'Female' },
+                { name: 'Microsoft David - English (United States)' }, { name: 'Alex' },
+                { lang: 'en-US' }, { lang: 'en-GB' },
+            ];
+
+            let selectedVoice = null;
+
+            for (const priority of voicePriorities) {
+                selectedVoice = voices.find(voice => {
+                    const nameMatch = priority.name && voice.name === priority.name;
+                    const langMatch = priority.lang && voice.lang === priority.lang;
+                    const searchMatch = priority.search && voice.name.includes(priority.search);
+
+                    if (priority.name) return nameMatch;
+                    if (priority.lang && priority.search) return langMatch && searchMatch;
+                    if (priority.lang) return langMatch;
+                    return false;
+                });
+                if (selectedVoice) break;
+            }
+
+            utterThis.voice = selectedVoice || voices[0];
+            utterThis.pitch = pitch;
+            utterThis.rate = rate;
+            synth.speak(utterThis);
+        }
+
+        // --- PARTICLE EFFECTS ---
+        const canvas = document.getElementById('particle-canvas');
+        let ctx = null;
+        if (canvas.getContext) ctx = canvas.getContext('2d');
+        let particles = [];
+        
+        function resizeCanvas() {
+            canvas.width = gameContainer.clientWidth;
+            canvas.height = gameContainer.clientHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+
+        function createConfetti() {
+            const count = 100;
+            const colors = ['#ef4444', '#3b82f6', '#fbbf24', '#22c55e', '#ec4899', '#8b5cf6'];
+            for (let i = 0; i < count; i++) {
+                particles.push({
+                    x: canvas.width / 2, y: canvas.height / 2,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    radius: Math.random() * 5 + 2,
+                    vx: Math.random() * 10 - 5, vy: Math.random() * -15 - 5,
+                    life: 100,
+                });
+            }
+        }
+
+        function animateParticles() {
+            if (!ctx) return;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach((p, index) => {
+                p.vy += 0.2; p.x += p.vx; p.y += p.vy; p.life--;
+                if (p.life <= 0) particles.splice(index, 1);
+                else {
+                    ctx.beginPath();
+                    ctx.fillStyle = p.color;
+                    ctx.globalAlpha = p.life / 100;
+                    ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.closePath();
+                }
+            });
+            ctx.globalAlpha = 1;
+            requestAnimationFrame(animateParticles);
+        }
+
+        // --- LOCAL STORAGE ---
+        function saveProgress() {
+            localStorage.setItem('toddlerGameProgress', JSON.stringify(state));
+        }
+
+        function loadProgress() {
+            const progress = JSON.parse(localStorage.getItem('toddlerGameProgress'));
+            if (progress) Object.assign(state, progress);
+            applyShopItems();
+            applyAvatar();
+            updateUI();
+        }
+        
+        // --- UI & TEMPLATE RENDERING ---
+        function updateUI() {
+            coinsCountEl.textContent = state.coins;
+            streakCountEl.textContent = state.streak;
+            if (avatarNameDisplayEl) {
+                 avatarNameDisplayEl.textContent = state.avatarName;
+            }
+            renderAllTemplates();
+        }
+
+        function renderAllTemplates() {
+            renderTemplate('menu-modal');
+            renderTemplate('badges-modal');
+            renderTemplate('shop-modal');
+            renderTemplate('avatar-builder-modal');
+            renderTemplate('confirm-modal');
+        }
+
+        function renderTemplate(templateId) {
+            const el = document.getElementById(templateId);
+            if (!el) return;
+            
+            let content = ''; // <-- Added declaration
+            switch(templateId) { // <-- Added missing switch statement
+                case 'game-screen': // <-- Added missing case
+                    content = `<div id="prompt-container"><div id="prompt-speaker">🔊</div><p id="prompt-text">Find the letter...</p></div>
+                        <!-- New display area for counting items -->
+                        <div id="item-display-area"></div> 
+                        <div id="options-grid"></div>`;
+                    break;
+                case 'in-order-screen':
+                    content = `<div id="sequence-display-container"></div><p id="in-order-prompt" style="font-family: var(--font-main); font-size: 1.8rem; text-align: center; margin-bottom: 10px;">Click the letters in order!</p><div id="in-order-grid"></div>`;
+                    break;
+                case 'menu-modal':
+                    content = `<div id="menu-container" class="modal-content"><h2 class="modal-title">Let's Learn!</h2>
+                        <button class="game-mode-button" data-mode="letters" style="background-color: var(--primary-color);">Find Letters</button>
+                        <button class="game-mode-button" data-mode="numbers" style="background-color: var(--correct-color);">Find Numbers</button>
+                        <button class="game-mode-button" data-mode="counting" style="background-color: var(--teal-color);">Counting Fun</button>
+                        <button class="game-mode-button" data-mode="shapes" style="background-color: var(--orange-color);">Colors & Shapes</button>
+                        <button class="game-mode-button" data-mode="letterMatch" style="background-color: var(--purple-color);">Letter Matching</button>
+                        <button class="game-mode-button" data-mode="inOrderLetters" style="background-color: var(--secondary-color); color: var(--text-color);">Letters in Order</button>
+                        <button class="game-mode-button" data-mode="inOrderNumbers" style="background-color: #ef4444;">Numbers in Order</button>
+                        <button class="game-mode-button" id="edit-avatar-btn" style="background-color: var(--pink-color); margin-top: 15px;">Edit Your Buddy</button>
+                        </div>`;
+                    break;
+                case 'badges-modal':
+                    content = `<div class="modal-content"><span class="close-modal">&times;</span><h2 class="modal-title">Your Awesome Badges</h2><div id="badge-container">${renderBadgesHTML()}</div></div>`;
+                    break;
+                case 'shop-modal':
+                    content = `<div class="modal-content"><span class="close-modal">&times;</span><h2 class="modal-title">Fun Shop</h2><div class="shop-coin-display">💰 You have ${state.coins} coins</div><div id="shop-container">${renderShopHTML()}</div></div>`;
+                    break;
+                case 'avatar-builder-modal':
+                    content = `<div class="modal-content"><h2 class="modal-title">Create Your Buddy!</h2><div id="avatar-builder-container">${renderAvatarBuilderHTML()}</div><button id="builder-finish-btn">Done!</button></div>`;
+                    break;
+                case 'confirm-modal':
+                    content = `<div class="modal-content"><p id="confirm-text"></p><div id="confirm-buttons"><button id="confirm-yes" class="confirm-btn">Yes</button><button id="confirm-no" class="confirm-btn">No</button></div></div>`;
+                    break;
+            }
+            el.innerHTML = content;
+            addEventListenersForTemplate(templateId);
+        }
+
+        function addEventListenersForTemplate(templateId) {
+            const containerEl = document.getElementById(templateId);
+            if (!containerEl) return;
+
+            switch(templateId) {
+                case 'game-screen':
+                    const speaker = containerEl.querySelector('#prompt-speaker');
+                    if (speaker) {
+                        speaker.addEventListener('click', () => {
+                            if (state.gameMode === 'counting') {
+                                const promptText = el('prompt-text')?.textContent || 'How many?';
+                                speak(promptText);
+                            } else if (state.gameMode === 'shapes') {
+                                speak(`Find the ${state.currentItem}`);
+                            } else if (state.gameMode === 'letterMatch') {
+                                const promptEl = el('prompt-text');
+                                if (promptEl) speak(promptEl.textContent);
+                            } else {
+                                speak(`Find the ${state.gameMode === 'letters' ? 'letter' : 'number'}, ${state.currentItem}`);
+                            }
+                        });
+                    }
+                    break;
+                case 'menu-modal':
+                    containerEl.querySelectorAll('.game-mode-button[data-mode]').forEach(btn => btn.addEventListener('click', handleGameModeSelect));
+                    const editBtn = containerEl.querySelector('#edit-avatar-btn');
+                    if (editBtn) {
+                        editBtn.addEventListener('click', () => {
+                            menuModal.classList.remove('visible');
+                            // Re-render to ensure preview and input are correct
+                            renderTemplate('avatar-builder-modal');
+                            const previewArea = document.getElementById('avatar-preview-area');
+                            if(previewArea) previewArea.innerHTML = generateAvatarSVG(state.selectedAvatar);
+                            avatarBuilderModal.classList.add('visible');
+                        });
+                    }
+                    break;
+                case 'badges-modal':
+                case 'shop-modal':
+                    const closeModalButton = containerEl.querySelector('.close-modal');
+                    if (closeModalButton) {
+                        closeModalButton.addEventListener('click', () => containerEl.classList.remove('visible'));
+                    }
+                    break;
+                case 'avatar-builder-modal':
+                     containerEl.querySelectorAll('.builder-option').forEach(opt => opt.addEventListener('click', handleBuilderOptionSelect));
+                     containerEl.querySelector('#builder-finish-btn').addEventListener('click', handleBuilderFinish);
+                     const nameInput = containerEl.querySelector('#avatar-name-input');
+                     if (nameInput) {
+                         nameInput.addEventListener('input', (e) => {
+                             let value = e.target.value.toUpperCase().replace(/[^A-Z]/g, '');
+                             e.target.value = value;
+                             state.avatarName = value;
+                             updateUI();
+                         });
+                     }
+                    break;
+            }
+        }
+        // Helper to get element by ID
+        const el = (id) => document.getElementById(id);
+        const elAll = (selector) => document.querySelectorAll(selector);
+
+        function switchScreen(screenId) {
+            elAll('.screen').forEach(s => s.classList.remove('active'));
+            el(screenId).classList.add('active');
+        }
+
+        // --- GAME LOGIC ---
+        function getRandomItem(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function generateOptions() {
+            const source = state.gameMode === 'letters' ? ALPHABET : NUMBERS;
+            state.currentItem = getRandomItem(source);
+            const options = new Set([state.currentItem]);
+            while(options.size < 4) options.add(getRandomItem(source));
+            state.options = Array.from(options);
+            shuffleArray(state.options);
+        }
+
+        function renderOptions() {
+            const grid = el('options-grid');
+            if (!grid) return;
+            grid.innerHTML = '';
+            state.options.forEach(option => {
+                const button = document.createElement('button');
+                button.className = 'option-button';
+                button.textContent = option;
+                button.dataset.value = option;
+                button.addEventListener('click', handleChoice);
+                grid.appendChild(button);
+            });
+        }
+        
+        // --- NEW: Render Shape Options ---
+        function renderShapeOptions() {
+            const grid = el('options-grid');
+            if (!grid) return;
+            grid.innerHTML = '';
+            // Clear the item display area
+            const itemDisplay = el('item-display-area');
+            if (itemDisplay) itemDisplay.innerHTML = ''; 
+
+            state.options.forEach(option => {
+                const button = document.createElement('button');
+                // Note the new 'shape-option' class
+                button.className = 'option-button shape-option'; 
+                // Set the SVG as the content, colored with the option's color
+                button.innerHTML = `<svg viewBox="0 0 100 100" fill="${option.color.hex}" xmlns="http://www.w3.org/2000/svg">
+                    ${option.shape.svg}
+                </svg>`;
+                button.dataset.value = `${option.color.name} ${option.shape.name}`;
+                button.addEventListener('click', handleChoice);
+                grid.appendChild(button);
+            });
+        }
+
+        function nextTurn() {
+            if (state.gameMode === 'counting') {
+                nextCountingTurn();
+            } else if (state.gameMode === 'shapes') {
+                nextShapeTurn();
+            } else if (state.gameMode === 'letterMatch') {
+                nextLetterMatchTurn();
+            } else {
+                // Existing logic for letters/numbers
+                generateOptions(); 
+                renderOptions();
+                const itemType = state.gameMode === 'letters' ? 'letter' : 'number';
+                const promptText = el('prompt-text');
+                if (promptText) {
+                    promptText.textContent = `Find the ${itemType}...`;
+                }
+                // Clear the item display area in case previous game was 'counting'
+                const itemDisplay = el('item-display-area');
+                if (itemDisplay) itemDisplay.innerHTML = ''; 
+                
+                setTimeout(() => speak(`Find the ${itemType}, ${state.currentItem}`), 200);
+            }
+        }
+
+        function handleChoice(e) {
+            // FIX: Use e.currentTarget to get the button, not e.target which could be the SVG
+            const selectedButton = e.currentTarget; 
+            const selected = selectedButton.dataset.value;
+            // const selectedButton = e.target; // The specific button clicked <-- This was the bug
+
+            // Handle non-string currentItem (e.g., from counting)
+            const currentTarget = String(state.currentItem);
+
+            if (selected === currentTarget) {
+                // CORRECT ANSWER
+                // Disable all buttons now that the turn is over
+                elAll('.option-button').forEach(b => b.disabled = true);
+
+                selectedButton.classList.add('correct-glow');
+                createConfetti(); 
+                speak(getRandomItem(CORRECT_PHRASES)); // Use a random phrase instead of just "Yay!"
+                
+                state.streak++;
+                const basePoints = 5;
+                const streakBonus = Math.pow(2, state.streak - 1);
+                state.coins += basePoints + streakBonus;
+                showPointsPopup(basePoints, streakBonus);
+
+                checkAchievements('first_correct');
+                if(state.streak >= 5) checkAchievements('streak_5');
+                if(state.streak >= 10) checkAchievements('streak_10');
+                if(state.coins >= 50) checkAchievements('coins_50');
+                if(state.coins >= 250) checkAchievements('coins_250');
+                if (state.gameMode === 'letters') {
+                    foundLetters.add(state.currentItem);
+                    if(foundLetters.size === ALPHABET.length) checkAchievements('all_letters_found');
+                } else if (state.gameMode === 'numbers') { // Added 'else if'
+                    foundNumbers.add(state.currentItem);
+                     if(foundNumbers.size === NUMBERS.length) checkAchievements('all_numbers_found');
+                }
+                // Move to next turn after a delay
+                setTimeout(() => nextTurn(), 1500);
+
+            } else {
+                // INCORRECT ANSWER
+                selectedButton.disabled = true; // Disable just this button temporarily
+                selectedButton.classList.add('shake-incorrect');
+                speak('Oops, try again.');
+                state.streak = 0; // Reset streak
+
+                // Remove the "nextTurn" call
+                // setTimeout(() => nextTurn(), 2000); // <-- REMOVED
+
+                // After the shake, re-enable the button so they can try again
+                setTimeout(() => {
+                    selectedButton.classList.remove('shake-incorrect');
+                    selectedButton.disabled = false; 
+                }, 800); // 800ms animation
+            }
+            updateUI(); saveProgress();
+        }
+
+        // --- NEW COUNTING GAME FUNCTIONS ---
+        function nextCountingTurn() {
+            const itemToCount = getRandomItem(COUNTING_ITEMS);
+            // Generate a correct count between 2 and 10
+            const correctCount = Math.floor(Math.random() * 9) + 2; 
+            
+            state.currentItem = String(correctCount);
+            const options = new Set([state.currentItem]);
+            
+            // Generate different wrong answers
+            while(options.size < 4) {
+                let wrongOption = Math.floor(Math.random() * 9) + 2;
+                options.add(String(wrongOption));
+            }
+            
+            state.options = Array.from(options);
+            shuffleArray(state.options);
+            
+            renderCountingItems(itemToCount, correctCount);
+            renderOptions(); // This will render the number buttons
+            
+            const promptText = el('prompt-text');
+            if (promptText) {
+                const plural = correctCount > 1 ? 's' : '';
+                // Handle emoji pluralization simply
+                const itemName = itemToCount; 
+                promptText.textContent = `How many ${itemName}?`;
+            }
+            
+            setTimeout(() => {
+                const promptEl = el('prompt-text');
+                if (promptEl) speak(promptEl.textContent);
+            }, 200);
+        }
+
+        function renderCountingItems(item, count) {
+            const displayArea = el('item-display-area');
+            if (!displayArea) return;
+            displayArea.innerHTML = ''; // Clear previous items
+            
+            let itemsHTML = '';
+            for (let i = 0; i < count; i++) {
+                itemsHTML += `<span class="counting-item">${item}</span>`;
+            }
+            displayArea.innerHTML = itemsHTML;
+        }
+
+        // --- NEW SHAPES GAME FUNCTIONS ---
+        function nextShapeTurn() {
+            // 1. Pick a correct color and shape
+            const correctColor = getRandomItem(COLORS);
+            const correctShape = getRandomItem(SHAPES);
+            state.currentItem = `${correctColor.name} ${correctShape.name}`;
+
+            const correctOption = { color: correctColor, shape: correctShape };
+            const options = [correctOption];
+
+            // 2. Generate 3 unique distractors
+            while (options.length < 4) {
+                const randColor = getRandomItem(COLORS);
+                const randShape = getRandomItem(SHAPES);
+                const newOption = { color: randColor, shape: randShape };
+
+                // Ensure it's not the correct answer
+                const isCorrect = (newOption.color.name === correctColor.name && newOption.shape.name === correctShape.name);
+                // Ensure it's not a duplicate of an existing option
+                const isDuplicate = options.some(opt => opt.color.name === newOption.color.name && opt.shape.name === newOption.shape.name);
+
+                if (!isCorrect && !isDuplicate) {
+                    options.push(newOption);
+                }
+            }
+
+            // 3. Shuffle and render
+            state.options = options;
+            shuffleArray(state.options);
+            
+            renderShapeOptions(); // Use the new renderer
+            
+            const promptText = el('prompt-text');
+            if (promptText) {
+                promptText.textContent = `Find the ${state.currentItem}...`;
+            }
+            
+            setTimeout(() => speak(`Find the ${state.currentItem}`), 200);
+        }
+
+        // --- NEW: Letter Matching Game Functions ---
+        function nextLetterMatchTurn() {
+            // 1. Decide to match upper-to-lower or lower-to-upper
+            const matchUpper = Math.random() > 0.5;
+            const sourceIndex = Math.floor(Math.random() * ALPHABET.length);
+
+            const promptLetter = matchUpper ? ALPHABET[sourceIndex] : ALPHABET_LOWERCASE[sourceIndex];
+            const correctLetter = matchUpper ? ALPHABET_LOWERCASE[sourceIndex] : ALPHABET[sourceIndex];
+            
+            state.currentItem = correctLetter;
+            const optionsSource = matchUpper ? ALPHABET_LOWERCASE : ALPHABET;
+
+            // 2. Generate options
+            const options = new Set([correctLetter]);
+            while(options.size < 4) {
+                options.add(getRandomItem(optionsSource));
+            }
+            
+            state.options = Array.from(options);
+            shuffleArray(state.options);
+            
+            // 3. Render
+            renderOptions(); // Re-use the existing options renderer
+            
+            // Clear the item display area
+            const itemDisplay = el('item-display-area');
+            if (itemDisplay) itemDisplay.innerHTML = ''; 
+
+            // 4. Set prompt
+            const promptText = el('prompt-text');
+            if (promptText) {
+                promptText.textContent = `Find the match for '${promptLetter}'`;
+            }
+            
+            setTimeout(() => speak(`Find the match for, ${promptLetter}`), 200);
+        }
+
+
+        // --- IN-ORDER GAME MODE LOGIC ---
+        function startInOrderGame() {
+            const isLetters = state.gameMode === 'inOrderLetters';
+            state.inOrderSequence = isLetters ? ALPHABET : NUMBERS;
+            state.inOrderDisplaySequence = [...state.inOrderSequence];
+            shuffleArray(state.inOrderDisplaySequence);
+            state.inOrderIndex = 0;
+            const promptEl = el('in-order-prompt');
+            if (promptEl) {
+                promptEl.textContent = isLetters ? 'Find the letters in order!' : 'Find the numbers in order!';
+            }
+            
+            // Adjust grid for numbers vs letters
+            const grid = el('in-order-grid');
+            if (grid) {
+                if(isLetters) {
+                    grid.style.gridTemplateColumns = 'repeat(5, 1fr)';
+                } else {
+                    // More compact grid for 0-20 numbers
+                    grid.style.gridTemplateColumns = 'repeat(7, 1fr)';
+                }
+            }
+
+            renderInOrderGrid();
+            renderSequenceDisplay();
+            speak(`Let's find the ${isLetters ? 'letters' : 'numbers'} in order. First, find ${state.inOrderSequence[0]}`);
+        }
+
+        function renderInOrderGrid() {
+            const grid = el('in-order-grid');
+            if(!grid) return;
+            grid.innerHTML = '';
+            state.inOrderDisplaySequence.forEach(item => {
+                const button = document.createElement('button');
+                button.className = 'in-order-item';
+                button.textContent = item;
+                button.dataset.value = item;
+                if (state.inOrderSequence.indexOf(item) < state.inOrderIndex) button.classList.add('completed');
+                button.addEventListener('click', handleInOrderChoice);
+                grid.appendChild(button);
+            });
+        }
+        
+        function handleInOrderChoice(e) {
+            const selected = e.target.dataset.value;
+            const nextItemInSequence = state.inOrderSequence[state.inOrderIndex];
+            
+            if (selected === nextItemInSequence) {
+                state.inOrderIndex++; 
+                state.coins += 2;
+                if(state.coins >= 50) checkAchievements('coins_50');
+                if(state.coins >= 250) checkAchievements('coins_250');
+                updateUI(); 
+                saveProgress();
+                if (state.inOrderIndex >= state.inOrderSequence.length) {
+                    speak('Wow, you did it!'); 
+                    createConfetti();
+                    const promptEl = el('in-order-prompt');
+                    if (promptEl) promptEl.textContent = 'You are amazing!';
+                    if(state.gameMode === 'inOrderLetters') checkAchievements('in_order_letters');
+                    if(state.gameMode === 'inOrderNumbers') checkAchievements('in_order_numbers');
+                    setTimeout(() => menuModal.classList.add('visible'), 2000);
+                } else {
+                    speak(`Great! Now find ${state.inOrderSequence[state.inOrderIndex]}`);
+                }
+                renderInOrderGrid();
+                renderSequenceDisplay();
+            } else {
+                speak(`Oops, try again.`);
+                const button = e.target;
+                const grid = el('in-order-grid');
+                if (grid) grid.style.pointerEvents = 'none';
+                button.classList.add('shake-incorrect');
+                button.style.backgroundColor = 'var(--incorrect-color)'; 
+                button.style.color = 'white';
+                setTimeout(() => {
+                    button.classList.remove('shake-incorrect');
+                    button.style.backgroundColor = ''; 
+                    button.style.color = '';
+                    if (grid) grid.style.pointerEvents = 'auto';
+                }, 800);
+            }
+        }
+
+        function renderSequenceDisplay() {
+            const container = el('sequence-display-container');
+            if (!container) return;
+            container.innerHTML = '';
+            state.inOrderSequence.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.className = 'sequence-item';
+                div.textContent = item;
+                if (index < state.inOrderIndex) {
+                    div.classList.add('filled');
+                }
+                container.appendChild(div);
+            });
+        }
+
+        // --- ACHIEVEMENTS & BADGES ---
+        function checkAchievements(badgeKey) {
+            if (!state.unlockedBadges.includes(badgeKey)) {
+                state.unlockedBadges.push(badgeKey);
+                showAchievementPopup(BADGES[badgeKey], badgeKey);
+                if (SHOP_DATA.stickers[badgeKey] && !state.unlockedStickers.includes(badgeKey)) {
+                    state.unlockedStickers.push(badgeKey);
+                }
+                saveProgress();
+                updateUI();
+            }
+        }
+        
+        function renderBadgesHTML() {
+            let html = '';
+            for (const key in BADGES) {
+                const badge = BADGES[key];
+                const isUnlocked = state.unlockedBadges.includes(key);
+                html += `<div><div class="badge ${isUnlocked ? 'unlocked' : ''}" title="${badge.description}">${badge.icon}</div><div class="badge-tooltip">${badge.title}</div></div>`;
+            }
+            return html;
+        }
+
+        function showAchievementPopup(badge, badgeKey) {
+            const popup = document.createElement('div');
+            popup.style.cssText = `position: absolute; top: 80px; left: 50%; transform: translateX(-50%); background: linear-gradient(45deg, var(--secondary-color), #fde047); color: var(--text-color); padding: 20px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); font-family: var(--font-main); z-index: 101; text-align: center; animation: slide-in-out 3s ease;`;
+            popup.innerHTML = `<div>🏆 New Badge! 🏆</div><div style="font-size: 1.2rem;">${badge.title}</div>`;
+            gameContainer.appendChild(popup);
+            speak(`New Badge! ${badge.title}`);
+            if(SHOP_DATA.stickers[badgeKey]) speak('You unlocked a new sticker!');
+            setTimeout(() => popup.remove(), 3000);
+        }
+
+        function showPointsPopup(base, bonus) {
+            const popup = document.createElement('div');
+            popup.innerHTML = `+${base}💰 +${bonus}🔥`;
+            popup.style.cssText = `
+                position: absolute; top: 50%; left: 50%;
+                transform: translate(-50%, -50%);
+                font-family: var(--font-main); font-size: 2.5rem;
+                color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+                padding: 10px 20px; background: linear-gradient(45deg, var(--correct-color), #86efac);
+                border-radius: 20px; border: 3px solid white;
+                z-index: 101; pointer-events: none;
+                animation: fade-up-out 1.5s ease-out forwards;
+            `;
+            gameContainer.appendChild(popup);
+            setTimeout(() => popup.remove(), 1450);
+        }
+
+        // --- AVATAR BUILDER LOGIC ---
+        function renderAvatarBuilderHTML() {
+            let html = `
+                <div class="builder-category">
+                    <div class="builder-category-title">Name Your Buddy (3 letters)</div>
+                    <input type="text" id="avatar-name-input" maxlength="3" value="${state.avatarName}" placeholder="ABC" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+                </div>
+                <div id="avatar-preview-area"></div>
+                <div id="builder-scroll-area">
+                    <div class="builder-controls">`;
+            const categories = {
+                head: 'Head Shape',
+                eyes: 'Eyes',
+                mouth: 'Mouth',
+                color: 'Color'
+            };
+
+            for (const category in categories) {
+                html += `<div class="builder-category"><div class="builder-category-title">${categories[category]}</div><div class="builder-options">`;
+                const unlockedParts = state.unlockedAvatarParts[category];
+                unlockedParts.forEach(partId => {
+                    const isSelected = state.selectedAvatar[category] === partId;
+                    if (category === 'color') {
+                        html += `<div class="builder-option color-option ${isSelected ? 'selected' : ''}" style="background-color:${partId}" data-type="${category}" data-id="${partId}"></div>`;
+                    } else {
+                        html += `<div class="builder-option ${isSelected ? 'selected' : ''}" data-type="${category}" data-id="${partId}">
+                            <svg viewBox="0 0 100 100" fill="none" stroke="#000000">
+                                ${AVATAR_PARTS[category][partId]}
+                            </svg>
+                        </div>`;
+                    }
+                });
+                html += `</div></div>`;
+            }
+            html += `</div></div>`;
+            return html;
+        }
+
+        function handleBuilderOptionSelect(e) {
+            const target = e.currentTarget;
+            const type = target.dataset.type;
+            const id = target.dataset.id;
+            state.selectedAvatar[type] = id;
+            // Re-render the builder to show the new selection
+            renderTemplate('avatar-builder-modal');
+            // Update the preview
+            const previewArea = document.getElementById('avatar-preview-area');
+            if(previewArea) previewArea.innerHTML = generateAvatarSVG(state.selectedAvatar);
+        }
+
+        function handleBuilderFinish() {
+            if (!state.avatarName || state.avatarName.length === 0) {
+                state.avatarName = 'BUD'; // Default name
+            }
+            state.avatarChosen = true;
+            applyAvatar();
+            saveProgress();
+            avatarBuilderModal.classList.remove('visible');
+            menuModal.classList.add('visible');
+        }
+
+        function generateAvatarSVG(avatarData) {
+            const { head, eyes, mouth, color } = avatarData;
+            return `
+                <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <g fill="${color}" stroke="${color === '#ffffff' ? '#000000' : 'none'}">
+                        ${AVATAR_PARTS.head[head]}
+                    </g>
+                    <g fill="black" stroke="black">
+                        ${AVATAR_PARTS.eyes[eyes]}
+                    </g>
+                    <g fill="none" stroke="black">
+                        ${AVATAR_PARTS.mouth[mouth]}
+                    </g>
+                </svg>
+            `;
+        }
+        
+        function applyAvatar() {
+            avatarDisplayEl.style.backgroundColor = 'transparent';
+            avatarDisplayEl.innerHTML = generateAvatarSVG(state.selectedAvatar);
+            const accessory = SHOP_DATA.accessories.find(a => a.id === state.selectedAccessory);
+            if (accessory && accessory.id !== 'none') {
+                 const accessoryEl = document.createElement('span');
+                 accessoryEl.className = 'avatar-accessory';
+                 accessoryEl.textContent = accessory.value;
+                 avatarDisplayEl.appendChild(accessoryEl);
+            }
+        }
+        
+        // --- SHOP LOGIC ---
+        function renderShopHTML() {
+            const categories = {
+                avatarParts: { title: "Avatar Parts", items: SHOP_DATA.avatarParts },
+                accessories: { title: "Dress Up", items: SHOP_DATA.accessories },
+                backgrounds: { title: "Fun Backgrounds", items: SHOP_DATA.backgrounds },
+                cursors: { title: "Cool Cursors", items: SHOP_DATA.cursors },
+                stickers: { title: "Sticker Book", items: Object.entries(SHOP_DATA.stickers).map(([key, val]) => ({id: key, ...val})) }
+            };
+
+            let html = '';
+            for (const key in categories) {
+                const category = categories[key];
+                html += `<div class="shop-category" data-category="${key}">
+                    <h3 class="shop-category-title">${category.title}</h3>`;
+                
+                if (key === 'stickers') {
+                    html += `<p class="shop-sticker-explainer">Earn badges in the game to unlock these cool stickers!</p>`;
+                }
+
+                html += `<div class="shop-grid">`;
+
+                category.items.forEach(item => {
+                    let isUnlocked, isSelected = false;
+
+                    switch(key) {
+                        case 'avatarParts':
+                            isUnlocked = state.unlockedAvatarParts[item.type].includes(item.value);
+                            break;
+                        case 'accessories':
+                            isUnlocked = state.unlockedAccessories.includes(item.id);
+                            isSelected = state.selectedAccessory === item.id;
+                            break;
+                        case 'backgrounds':
+                            isUnlocked = state.unlockedItems.backgrounds.includes(item.id);
+                            isSelected = state.selectedItems.background === item.id;
+                            break;
+                        case 'cursors':
+                            isUnlocked = state.unlockedItems.cursors.includes(item.id);
+                            isSelected = state.selectedItems.cursor === item.id;
+                            break;
+                        case 'stickers':
+                            isUnlocked = state.unlockedStickers.includes(item.id);
+                            break;
+                    }
+                    
+                    let itemContent = '';
+                    let itemStyle = '';
+
+                    if (key === 'backgrounds') {
+                        itemStyle = `style="background: ${item.value};"`;
+                        if (item.id === 'default') itemContent = `<span style="font-size: 1rem; color: #333; font-weight: bold;">Default</span>`;
+                    } else if (key === 'cursors' && item.id === 'default') {
+                         itemContent = `<span style="font-size: 1.5rem; color: #333; font-weight: bold;">Auto</span>`;
+                    } else if (key === 'avatarParts') {
+                        if (item.type === 'color') {
+                            itemStyle = `style="background-color: ${item.value}"`;
+                        } else {
+                            // --- THIS IS THE FIX ---
+                            // Ensure the AVATAR_PARTS entry exists before trying to access it
+                            if (AVATAR_PARTS[item.type]?.[item.value]) { // Use optional chaining
+                                itemContent = `<svg viewBox="0 0 100 100" fill="none" stroke="#000000" style="width: 70%; height: 70%;">
+                                    ${AVATAR_PARTS[item.type][item.value]}
+                                </svg>`;
+                            } else {
+                                itemContent = '?'; // Placeholder if SVG data is missing
+                                console.warn(`Missing SVG data for avatar part: ${item.type} - ${item.value}`);
+                            }
+                            // --- END OF FIX ---
+                        }
+                    }
+                    else {
+                        itemContent = item.icon || item.value || item.id;
+                    }
+
+                    html += `<div class="shop-item ${key === 'stickers' ? 'sticker-item' : ''} ${!isUnlocked ? 'locked' : ''} ${isSelected ? 'selected' : ''}" 
+                        ${itemStyle}
+                        onclick="handleShopItemClick('${key}', '${item.id}')">
+                        ${itemContent}
+                        ${!isUnlocked && item.cost > 0 ? `<div class="lock-icon">🔒</div><div class="item-cost">💰 ${item.cost}</div>` : ''}
+                    </div>`;
+                });
+                html += `</div></div>`;
+            }
+            return html;
+        }
+
+        window.handleShopItemClick = (category, itemId) => {
+            if (category === 'stickers') return;
+
+            const itemData = SHOP_DATA[category].find(i => i.id === itemId);
+            if (!itemData) return;
+
+            let isUnlocked, unlockedList, selectedProp, selectedSubProp = null;
+
+            switch(category) {
+                case 'avatarParts':
+                    unlockedList = state.unlockedAvatarParts[itemData.type];
+                    isUnlocked = unlockedList.includes(itemData.value);
+                    break;
+                case 'accessories':
+                    unlockedList = state.unlockedAccessories;
+                    isUnlocked = unlockedList.includes(itemId);
+                    break;
+                case 'backgrounds':
+                    unlockedList = state.unlockedItems.backgrounds;
+                    isUnlocked = unlockedList.includes(itemId);
+                    break;
+                case 'cursors':
+                    unlockedList = state.unlockedItems.cursors;
+                    isUnlocked = unlockedList.includes(itemId);
+                    break;
+                default: return;
+            }
+
+            const applySelection = () => {
+                if (category === 'accessories') state.selectedAccessory = itemId;
+                else if (category === 'backgrounds') state.selectedItems.background = itemId;
+                else if (category === 'cursors') state.selectedItems.cursor = itemId;
+                else if (category === 'avatarParts') state.selectedAvatar[itemData.type] = itemData.value;
+
+                if (category.startsWith('avatar') || category === 'accessories') applyAvatar();
+                else applyShopItems();
+
+                updateUI();
+                saveProgress();
+            };
+
+            if (isUnlocked) {
+                applySelection();
+            } else { 
+                if (state.coins >= itemData.cost) {
+                    showConfirm(`Buy ${itemData.name} for ${itemData.cost} coins?`, () => {
+                        state.coins -= itemData.cost;
+                        unlockedList.push(category === 'avatarParts' ? itemData.value : itemId);
+                        checkAchievements('first_purchase');
+                        speak(`Wow, a new ${itemData.name}!`);
+                        applySelection();
+                    });
+                } else {
+                    speak('Not enough coins.');
+                }
+            }
+        };
+
+        function applyShopItems() {
+            const bgItem = SHOP_DATA.backgrounds.find(b => b.id === state.selectedItems.background);
+            if (bgItem) gameContainer.style.background = bgItem.value;
+            
+            const cursorItem = SHOP_DATA.cursors.find(c => c.id === state.selectedItems.cursor);
+            if(cursorItem) {
+                if(cursorItem.id === 'default') gameContainer.style.cursor = 'auto';
+                else gameContainer.style.cursor = `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='48' viewport='0 0 100 100' style='fill:black;font-size:24px;'><text y='50%'>${cursorItem.value}</text></svg>") 16 0, auto`;
+            }
+        }
+        
+        function showConfirm(text, onConfirm) {
+            const confirmText = el('confirm-text');
+            if(!confirmText) return;
+            confirmText.textContent = text;
+            confirmModal.classList.add('visible');
+
+            const yesBtn = el('confirm-yes');
+            const noBtn = el('confirm-no');
+
+            const confirmHandler = () => {
+                onConfirm();
+                confirmModal.classList.remove('visible');
+                cleanup();
+            };
+            const cancelHandler = () => {
+                confirmModal.classList.remove('visible');
+                cleanup();
+            };
+            
+            const cleanup = () => {
+                yesBtn.removeEventListener('click', confirmHandler);
+                noBtn.removeEventListener('click', cancelHandler);
+            }
+            
+            yesBtn.addEventListener('click', confirmHandler);
+            noBtn.addEventListener('click', cancelHandler);
+        }
+
+        // Add keyframes for the popup
+        const styleSheet = document.createElement("style");
+        styleSheet.type = "text/css";
+        styleSheet.innerText = `
+            @keyframes slide-in-out { 0% { top: -100px; opacity: 0; } 20% { top: 80px; opacity: 1; } 80% { top: 80px; opacity: 1; } 100% { top: -100px; opacity: 0; } }
+            @keyframes fade-up-out { 0% { opacity: 1; transform: translate(-50%, -50%) scale(1); } 100% { opacity: 0; transform: translate(-50%, -150%) scale(1.2); } }
+        `;
+        document.head.appendChild(styleSheet);
+
+
+        // --- EVENT LISTENERS ---
+        function handleGameModeSelect(e) {
+            state.gameMode = e.target.dataset.mode;
+            menuModal.classList.remove('visible');
+            if (state.gameMode.startsWith('inOrder')) {
+                switchScreen('in-order-screen');
+                startInOrderGame();
+            } else {
+                switchScreen('game-screen');
+                nextTurn();
+            }
+        }
+
+        // Navigation
+        navHomeBtn.addEventListener('click', () => menuModal.classList.add('visible'));
+        navBadgesBtn.addEventListener('click', () => badgesModal.classList.add('visible'));
+        navShopBtn.addEventListener('click', () => {
+            checkAchievements('shop_explorer');
+            shopModal.classList.add('visible');
+        });
+        
+        // --- INITIALIZATION ---
+        function init() {
+            // Set up the static structure of the game screens once.
+            renderTemplate('game-screen');
+            renderTemplate('in-order-screen');
+
+            loadProgress();
+            resizeCanvas();
+            animateParticles();
+
+            // Start on menu screen or avatar selection if first time
+            switchScreen('game-screen');
+            
+            if (!state.avatarChosen) {
+                avatarBuilderModal.classList.add('visible');
+            } else {
+                menuModal.classList.add('visible');
+            }
+        }
+
+        init();
+    });
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
